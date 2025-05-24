@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class deneme : MonoBehaviour
+public class YenidenOyna : MonoBehaviour
 {
     public Button retryButton;
 
@@ -13,7 +13,10 @@ public class deneme : MonoBehaviour
 
     void Start()
     {
-        retryButton.onClick.AddListener(() => SceneManagerController.Instance.LoadSceneByName("Level1"));
+
+        retryButton.onClick.AddListener(() => SceneManagerController.Instance.LoadPreviousScene());
 
     }
+
+
 }

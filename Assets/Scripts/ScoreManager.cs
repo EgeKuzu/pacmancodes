@@ -54,7 +54,7 @@ public class ScoreManager : MonoBehaviour
 
     public void GetToEndScreen()
     {
-        if (score == 500)
+        if (score == 1400)
         {
             if (GameFacade.Instance != null)
             {

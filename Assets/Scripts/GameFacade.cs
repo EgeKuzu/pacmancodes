@@ -101,6 +101,7 @@ public class GameFacade : MonoBehaviour
     {
         SceneManagerController.Instance.LoadNextScene();
     }
+
     
     // Tüm sistemleri yeniden başlatma (örnek yeni bir seviye başlangıcı)
     public void ResetGame()

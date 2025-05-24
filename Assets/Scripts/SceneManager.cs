@@ -1,17 +1,19 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
+using System.Collections.Generic; 
 public class SceneManagerController : MonoBehaviour
 {
     public static SceneManagerController Instance;
+    private Stack<string> sceneHistory = new Stack<string>();
+
 
     private void Awake()
     {
-        DontDestroyOnLoad(gameObject);
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else
         {
@@ -19,12 +21,33 @@ public class SceneManagerController : MonoBehaviour
         }
     }
 
-    
-    public void ReloadCurrentScene()
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Scene currentScene = SceneManager.GetActiveScene();
-        SceneManager.LoadScene(currentScene.name);
+        string sceneName = scene.name;
+        if (sceneHistory.Count == 0 || sceneHistory.Peek() != sceneName)
+        {
+            sceneHistory.Push(sceneName);
+        }
     }
+
+
+
+    public void LoadPreviousScene()
+    {
+        if (sceneHistory.Count > 1)
+        {
+            sceneHistory.Pop();
+
+            string previousScene = sceneHistory.Peek();
+            ScoreManager.Instance.fixScore();
+            SceneManager.LoadScene(previousScene);
+        }
+        else
+        {
+            Debug.LogWarning("Önceki sahne yok.");
+        }
+    }
+
     
     public void LoadSceneByName(string sceneName)
     {
@@ -42,14 +65,14 @@ public class SceneManagerController : MonoBehaviour
         }
         else
         {
-            Debug.Log("Sahne bitti dayeeeeeeee");
+            Debug.Log("Sahne bitti");
             
         }
     }
 
     public void QuitGame()
     {
-        Debug.Log("Çıkışşşş yapıyorum");
+        Debug.Log("Çıkış yapılıyor.");
         Application.Quit();
     }
     

@@ -2,10 +2,12 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
+
     public Transform pacman;
     public Transform[] ghosts;
     public Vector3 pacmanStartPos;
@@ -19,7 +21,7 @@ public class GameManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
         else
         {
@@ -27,79 +29,82 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    public void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        
         pacman = GameObject.FindGameObjectWithTag("Pacman")?.transform;
 
         GameObject[] ghostObjects = GameObject.FindGameObjectsWithTag("Ghost");
         ghosts = ghostObjects.Select(g => g.transform).ToArray();
 
-        
-        pacmanStartPos = pacman != null ? pacman.position : Vector3.zero;
-    }
+        ghostStartPositions = ghosts.Select(g => g.position).ToArray();
 
-    void Start()
-    {
-        pacmanStartPos = pacman.position;
-
-        StartCoroutine(SpawnGhosts(10f)); 
+        if (ghosts.Length > 0 && pacman != null)
+        {
+            pacmanStartPos = pacman.position;
+            spawnCoroutine = StartCoroutine(SpawnGhosts(1f));
+        }
     }
 
     public void ResetPositions()
     {
-        
-    pacman.position = pacmanStartPos;
+        if (pacman != null)
+            pacman.position = pacmanStartPos;
 
-    
-    for (int i = 0; i < ghosts.Length; i++)
-    {
-        ghosts[i].position = ghostStartPositions[i];     
-        EnemyMovements enemyScript = ghosts[i].GetComponent<EnemyMovements>();
-        if (enemyScript != null)
+        if (ghosts != null && ghosts.Length == ghostStartPositions.Length)
         {
-            enemyScript.canMove = false;
+            for (int i = 0; i < ghosts.Length; i++)
+            {
+                ghosts[i].position = ghostStartPositions[i];
+
+                EnemyMovements enemyScript = ghosts[i].GetComponent<EnemyMovements>();
+                if (enemyScript != null)
+                    enemyScript.canMove = false;
+            }
+
+            if (spawnCoroutine != null)
+                StopCoroutine(spawnCoroutine);
+
+            spawnCoroutine = StartCoroutine(SpawnGhosts(1f));
+            StartCoroutine(EnableGhostsAfterDelay(1f));
         }
     }
-
-    
-        if (spawnCoroutine != null)
-            StopCoroutine(spawnCoroutine);
-
-        spawnCoroutine = StartCoroutine(SpawnGhosts(10f));
-
-
-        StartCoroutine(EnableGhostsAfterDelay(1f));
-    }
-
-
 
     IEnumerator EnableGhostsAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-        for (int i = 0; i < ghosts.Length; i++)
+        foreach (var ghost in ghosts)
         {
-            EnemyMovements enemyScript = ghosts[i].GetComponent<EnemyMovements>();
+            var enemyScript = ghost.GetComponent<EnemyMovements>();
             if (enemyScript != null)
                 enemyScript.canMove = true;
         }
-       
     }
-  
     IEnumerator SpawnGhosts(float delay)
     {
+        if (ghosts == null || ghosts.Length == 0)
+        {
+            yield break; 
+        }
+
         for (int i = 0; i < ghosts.Length; i++)
         {
-            yield return new WaitForSeconds(delay);
+            if (i == 0)
+                yield return new WaitForSeconds(delay);
+            else
+                yield return new WaitForSeconds(5f);
+
+            if (i >= ghosts.Length) yield break; 
+
+            if (ghosts[i] == null) continue;
 
             ghosts[i].position = spawnPoint;
 
-            EnemyMovements enemyScript = ghosts[i].GetComponent<EnemyMovements>();
+            var enemyScript = ghosts[i].GetComponent<EnemyMovements>();
             if (enemyScript != null)
                 enemyScript.canMove = true;
         }
 
         spawnCoroutine = null;
     }
-}
 
+}
